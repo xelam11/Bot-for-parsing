@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import json
 
 import requests
 from telegram import Bot
@@ -8,13 +9,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
 
 time_sleep = 900
+
+status_dict = {
+    'reviewing': 'Работа взята в ревью.',
+    'rejected': 'К сожалению в работе нашлись ошибки.',
+    'approved':
+        'Ревьюеру всё понравилось, можно приступать к следующему уроку.',
+}
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -31,12 +38,14 @@ def parse_homework_status(homework):
         return 'Не удалось получить данные homework_name, ' \
                'homework_name is None'
     elif homework.get('status') == 'reviewing':
-        verdict = 'Работа взята в ревью.'
+        verdict = status_dict['reviewing']
     elif homework.get('status') == 'rejected':
-        verdict = 'К сожалению в работе нашлись ошибки.'
+        verdict = status_dict['rejected']
     elif homework.get('status') == 'approved':
-        verdict = 'Ревьюеру всё понравилось, ' \
-                  'можно приступать к следующему уроку.'
+        verdict = status_dict['approved']
+    else:
+        verdict = 'Пришел неожиданный статус'
+        logging.error('Пришел неожиданный статус')
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
@@ -58,6 +67,9 @@ def get_homework_statuses(current_timestamp):
         return homework_statuses.json()
 
     except requests.RequestException as e:
+        logging.error(f'Произошло исключение: {e}', exc_ifo=True)
+
+    except json.JSONDecodeError as e:
         logging.error(f'Произошло исключение: {e}', exc_ifo=True)
 
 
