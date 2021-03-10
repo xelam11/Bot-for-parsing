@@ -37,16 +37,14 @@ def parse_homework_status(homework):
         logging.error('Не удалось получить данные дз, homework_name is None')
         return 'Не удалось получить данные homework_name, ' \
                'homework_name is None'
-    elif homework.get('status') == 'reviewing':
-        verdict = status_dict['reviewing']
-    elif homework.get('status') == 'rejected':
-        verdict = status_dict['rejected']
-    elif homework.get('status') == 'approved':
-        verdict = status_dict['approved']
+
+    status = homework.get('status')
+
+    if status in status_dict:
+        verdict = status_dict[status]
+        return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
     else:
-        verdict = 'Пришел неожиданный статус'
-        logging.error('Пришел неожиданный статус')
-    return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
+        return 'Пришел неожиданный статус'
 
 
 def get_homework_statuses(current_timestamp):
